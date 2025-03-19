@@ -17,22 +17,14 @@ df = pd.read_csv("assets/historic.csv")
 history_df = pd.DataFrame(columns=["start_year", "planning_time", "cash_allocation", "stock_allocation",
                                    "bond_allocation", "start_balance", "end_balance", "cagr"])
 
-print("Columns in dff:", history_df.columns)
 
-
-def record_history(stocks, cash, start_bal, planning_time, start_yr, dff):
+def record_history(stocks, cash, start_bal, planning_time, start_yr,
+                   dff):
     global history_df, history_index
-
-    # Calculate the end balance and CAGR
-    end_balance = dff["Total"].iloc[-1] if not dff.empty and "Total" in dff.columns else 0
-
-    cagr_value = cagr(dff["Total"]) if not dff.empty and "Total" in dff.columns else "0.0%"
-
-    # Calculate bond allocation
+    end_balance = dff['Total'].iloc[-1] if not dff.empty and 'Total' in dff.columns else 0
+    cagr_value = cagr(dff['Total']) if not dff.empty and 'Total' in dff.columns else '0.0%'
     bond_allocation = 100 - cash - stocks
-
-    # Create a new entry for the history log
-    new_entry = {
+    entries = {
         "start_year": start_yr,
         "planning_time": planning_time,
         "cash_allocation": cash,
@@ -42,14 +34,10 @@ def record_history(stocks, cash, start_bal, planning_time, start_yr, dff):
         "end_balance": end_balance,
         "cagr": cagr_value,
     }
-
-    # Convert the new entry to a DataFrame
-    new_entry_df = pd.DataFrame([new_entry])
-
-    # Use pd.concat to add the new entry to the existing history_df
-    history_df = pd.concat([history_df, new_entry_df], ignore_index=True)
-
-    # Update the history index to point to the most recent setting
+    # convert it into  a dataframe
+    entries_pdf = pd.DataFrame([entries])
+    # use pd.concat to add the entries to the existing history_df
+    history_df = pd.concat([history_df, entries_pdf], ignore_index=True)
     history_index = len(history_df) - 1
 
 
@@ -311,11 +299,8 @@ def make_line_chart(dff):
 Make Tabs
 """
 
-# =======Play tab components
-previous_button = dbc.Button(
-    'Previous Setting', id='previous-setting-btn', n_clicks=0, disabled=True, color='primary'
-)
-
+# Play Tab
+previous_button = dbc.Button('Previous Setting', id='previous-setting-btn', n_clicks=0, disabled=True, color='primary')
 asset_allocation_card = dbc.Card(asset_allocation_text, className="mt-2")
 
 slider_card = dbc.Card(
@@ -486,40 +471,28 @@ results_card = dbc.Card(
 
 # ==== History Tab Component
 
-history_card = dbc.Card(
-    [
-        dbc.CardHeader("This is your history with this app"),
-        dash_table.DataTable(
-            id='history-table',
-            columns=[
-                {"name": "Start Year", "id": "start_year", "type": "numeric"},
-                {"name": "Years", "id": "planning_time", "type": "numeric"},
-                {"name": "Cash %", "id": "cash_allocation", "type": "numeric", "format": {"specifier": ".1f"}},
-                {"name": "Stock %", "id": "stock_allocation", "type": "numeric", "format": {"specifier": ".1f"}},
-                {"name": "Bond %", "id": "bond_allocation", "type": "numeric", "format": {"specifier": ".1f"}},
-                {"name": "Start Balance", "id": "start_balance", "type": "numeric", "format": {"specifier": "$,.0f"}},
-                {"name": "End Balance", "id": "end_balance", "type": "numeric", "format": {"specifier": "$,.0f"}},
-                {"name": "CAGR", "id": "cagr", "type": "text"}
-                ,
-            ],
-            data=[],
-            sort_action='native',
-            style_table={"height": "400px", "overflowY": "auto"},
-            style_cell={
-                'textAlign': 'center',
-                'padding': '8px'
-            },
-
-        ),
-        dbc.Button(
-            "Apply Selected Settings",
-            id="apply-history-btn",
-            color="primary",
-            className="mt-3"
-        ),
-
-    ],
-    className="mt-4",
+history_card = dbc.Card([
+    dbc.CardHeader('Your History with this app'),
+    dash_table.DataTable(
+        id='history-table',
+        columns=[
+            {'name': "Start Year", 'id': "start_year", 'type': 'numeric'},
+            {'name': "Years", 'id': "planning_year", 'type': 'numeric'},
+            {'name': "Cash", 'id': "cash_allocation", 'type': 'numeric'},
+            {'name': "Stock", 'id': "stock_allocation", 'type': 'numeric'},
+            {'name': "Bond", 'id': "bond_allocation", 'type': 'numeric'},
+            {'name': "Start Balance", 'id': "start_balance", 'type': 'numeric'},
+        ],
+        data=[],
+        sort_action='native',
+        style_table={'height': "400px", 'overflowY': "auto"},
+        style_cell={
+            'textAlign': 'center',
+            'padding': '8px'
+        },
+    )
+],
+    className="mt-4"
 )
 
 data_source_card = dbc.Card(
@@ -561,23 +534,22 @@ tabs = dbc.Tabs(
 ==========================================================================
 Helper functions to calculate investment results, cagr and worst periods
 """
+
 history_data = []
 
 
 def history_save_data(start_amount, start_year, number_of_years, cash, stocks, bond):
-    # These variables have a global scope, meaning they can be accessed and
-    # modified by any function within the same module.
+    # These variables have a global scope, meaning they can be accessed and modified by any function within the same
+    # module.
     global history_data
-    history_data.append(
-        {
-            'start_amount': start_amount,
-            'start_year': start_year,
-            'number_of_years': number_of_years,
-            'cash': cash,
-            'stocks': stocks,
-            'bond': bond,
-        }
-    )
+    history_data.append({
+        'start_amount': start_amount,
+        'start_year': start_year,
+        'number_of_years': number_of_years,
+        'cash': cash,
+        'stocks': stocks,
+        'bond': bond,
+    })
 
 
 def backtest(stocks, cash, start_bal, nper, start_yr):
@@ -622,12 +594,12 @@ def backtest(stocks, cash, start_bal, nper, start_yr):
             dff.loc[yr, "Bonds"] = dff.loc[yr, "Bonds"] * (
                     1 + dff.loc[yr, "10yr T.Bond"]
             )
-            dff.loc[yr, "Total"] = dff.loc[yr, ["Cash", "Bonds", "Stocks"]].sum()
-            dff.loc[yr, 'Total'] = float(dff.loc[yr, 'Total'])
+            dff.loc[yr, "Total"] = int(dff.loc[yr, ["Cash", "Bonds", "Stocks"]].sum())
+            # dff.loc[yr, 'Total'] = int(dff.loc[yr, 'Total'])
 
     dff = dff.reset_index(drop=True)
     columns = ["Cash", "Stocks", "Bonds", "Total"]
-    dff[columns] = dff[columns].round(0).astype('int64')
+    dff[columns] = dff[columns].round(0)
 
     # create columns for when portfolio is all cash, all bonds or  all stocks,
     #   include inflation too
@@ -746,8 +718,8 @@ def update_history_tab(active_tab):
      Output("bond", "value", allow_duplicate=True),
      Output("starting_amount", "value", allow_duplicate=True),
      Output("tabs", "active_tab")],
-    [Input("apply-history-btn", "n_clicks"),
-     Input("history-table", "selected_rows")],
+    [  # Input("apply-history-btn", "n_clicks"),
+        Input("history-table", "selected_rows")],
     [State("history-table", "data")],
     prevent_initial_call=True
 )
@@ -766,7 +738,7 @@ def apply_history_settings(n_clicks, selected_rows, table_data):
         selected_data["stock_allocation"],
         selected_data["bond_allocation"],
         selected_data["start_balance"],
-        "tab-2"  # Switch to Play tab
+        "tab-2"
     )
 
 
@@ -866,30 +838,23 @@ def update_dashboard(
     planning_time = 1 if planning_time is None else planning_time
     start_yr = MIN_YR if start_yr is None else int(start_yr)
 
-    # Calculate valid planning time start year
     max_time = MAX_YR + 1 - start_yr
     planning_time = min(max_time, planning_time)
     if start_yr + planning_time > MAX_YR:
         start_yr = MAX_YR - planning_time + 1
 
-    # Create investment returns dataframe
     dff = backtest(stocks, cash, start_bal, planning_time, start_yr)
 
-    # Create data for DataTable
     data = dff.to_dict("records")
 
-    # Create the line chart
     fig = make_line_chart(dff)
 
     summary_table = make_summary_table(dff)
 
-    # Format ending balance
     ending_amount = f"${dff['Total'].iloc[-1]:0,.0f}"
 
-    # Calculate CAGR
     ending_cagr = cagr(dff["Total"])
 
-    # Update the bar chart and other sliders
     bonds = 100 - stocks - cash
     slider_input = [cash, bonds, stocks]
 
@@ -900,10 +865,7 @@ def update_dashboard(
     else:
         investment_style = "Moderate"
 
-        # Bar chart figure
     bar_chart = make_bar(slider_input, investment_style + " Asset Allocation")
-
-    # Update the stock slider
     max_slider = 100 - int(cash)
     stocks = min(max_slider, stocks)
 
@@ -932,5 +894,5 @@ def update_dashboard(
     )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
