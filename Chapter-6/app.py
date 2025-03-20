@@ -775,19 +775,19 @@ def update_dashboard(
 ):
     global history_df, history_index
 
-    # Get current context to identify trigger
+    # get current context to identify trigger
     ctx = dash.callback_context
     trigger_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else None
 
-    # Handle previous settings button click
+    # handling previous settings button click
     if trigger_id == 'previous-setting-btn' and prev_n_clicks > 0:
-        # There's at least one history entry
+        # TWhen there is atleast one history entry
         if len(history_df) >= 1:
-            # If we're at the current settings (end of history), start by going back one
+            # if we are at the end then it has to go back
             if history_index >= len(history_df) or history_index == -1:
                 history_index = len(history_df) - 1
 
-            # Get the settings at the current history index
+            # getting the settings at the current history index
             prev_setting = history_df.iloc[history_index]
             stocks = prev_setting['stock_allocation']
             cash = prev_setting['cash_allocation']
@@ -796,40 +796,29 @@ def update_dashboard(
             start_yr = prev_setting['start_year']
             planning_time = prev_setting['planning_time']
 
-            # Move back one more position for the next click
+            # move back one more position for the next click
             history_index -= 1
 
-            # Button should be disabled if we reach the oldest entry
+            # button should be disabled if we reach the oldest entry
             disabled = history_index < 0
         else:
             disabled = True
     elif trigger_id == 'time_period':
-        # Handle time period selection
+        # handling time period selection
         period_data = time_period_data[time_period]
         start_yr = period_data["start_yr"] if isinstance(period_data["start_yr"], int) else int(period_data["start_yr"])
         planning_time = period_data["planning_time"]
-        # Don't update the allocation as it's not part of the time period selection
         disabled = len(history_df) == 0
 
 
     else:
-
         # Only record history for interactions that change values
-
         if trigger_id is not None and trigger_id not in ['previous-setting-btn', 'time_period']:
-            # Create investment returns dataframe for the current settings
-
             dff = backtest(stocks, cash, start_bal, planning_time, start_yr)
-
-            # Record the current settings in history
 
             record_history(stocks, cash, start_bal, planning_time, start_yr, dff)
 
-            # Reset history index to point to current settings
-
             history_index = len(history_df) - 1
-
-        # Button is enabled as soon as we have at least one entry
 
         disabled = len(history_df) == 0
 
