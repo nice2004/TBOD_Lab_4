@@ -698,11 +698,6 @@ Callbacks
 def update_history_tab(active_tab):
     global history_df
 
-    # Get current context to identify trigger
-    ctx = dash.callback_context
-    trigger_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else None
-
-    # Update the history table only when the 'History' tab is active
     if active_tab == 'tab-4':
         return history_df.to_dict('records')
 
@@ -727,10 +722,10 @@ def apply_history_settings(n_clicks, selected_rows, table_data):
     if n_clicks is None or not selected_rows or not table_data:
         raise dash.exceptions.PreventUpdate
 
-    # Get the selected row data
+    # getting the selected row data
     selected_data = table_data[selected_rows[0]]
 
-    # Return the settings to apply and switch to the Play tab
+    # return the settings to apply and switch to the Play tab
     return (
         selected_data["start_year"],
         selected_data["planning_time"],
